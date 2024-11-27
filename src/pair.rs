@@ -21,8 +21,8 @@ pub(crate) fn pairs_from_paths(left_path: &Path, right_path: &Path) -> anyhow::R
     if !right_path.is_dir() {
         anyhow::bail!("Right path ('{}') is not a directory", left_path.display());
     }
-    let mut names = read_images_from_dir(&left_path)?;
-    names.append(&mut read_images_from_dir(&right_path)?);
+    let mut names = read_images_from_dir(left_path)?;
+    names.append(&mut read_images_from_dir(right_path)?);
     names.sort_unstable();
     names.dedup();
     Ok(names

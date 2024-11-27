@@ -1,32 +1,74 @@
-use crate::difference::{Difference, ImageInfo, ImageInfoResult, PairResult};
+use crate::difference::{Difference, ImageInfoResult, PairResult, Size};
+use base64::prelude::*;
 use chrono::SubsecRound;
 use maud::{html, Markup, DOCTYPE};
 use std::fs::File;
-use std::io::Write;
+use std::io::{Cursor, Write};
 use std::path::Path;
 
+const ICON: &[u8] = include_bytes!("../docs/logo_small.png");
+const IMAGE_SIZE_LIMIT: u32 = 400;
+
+pub(crate) struct ReportConfig<'a> {
+    pub left_title: &'a str,
+    pub right_title: &'a str,
+}
+
+fn embed_png_url(data: &[u8]) -> String {
+    let mut url = "data:image/png;base64,".to_string();
+    url.push_str(&base64::engine::general_purpose::STANDARD.encode(data));
+    url
+}
+
+fn embed_png(data: &[u8], width: Option<u32>, height: Option<u32>) -> Markup {
+    html! {
+        img src=(embed_png_url(data)) width=[width] height=[height];
+    }
+}
+
 fn render_image(image_info: &ImageInfoResult, path: &Path) -> Markup {
-    let size_limit = 400;
     match image_info {
-        Ok(info) => {
-            let size = &info.size;
-            let (w, h) = if size.width > size.height {
-                (Some(size.width.min(size_limit)), None)
-            } else {
-                (None, Some(size.height.min(size_limit)))
-            };
+        ImageInfoResult::Loaded(info) => {
+            let (w, h) = html_size(&info.size, IMAGE_SIZE_LIMIT);
             html! {
                 img src=(path.display()) width=[w] height=[h];
             }
         }
-        Err(err) => {
+        ImageInfoResult::Missing => {
+            html! { "File is missing" }
+        }
+        ImageInfoResult::Error(err) => {
             html! { "Error: " (err) }
         }
     }
 }
 
+pub fn html_size(size: &Size, size_limit: u32) -> (Option<u32>, Option<u32>) {
+    if size.width > size.height {
+        (Some(size.width.min(size_limit)), None)
+    } else {
+        (None, Some(size.height.min(size_limit)))
+    }
+}
+
 fn render_difference_image(difference: &Difference) -> Markup {
-    html!("N/A")
+    match difference {
+        Difference::None
+        | Difference::LoadError
+        | Difference::MissingFile
+        | Difference::SizeMismatch => html!("N/A"),
+        Difference::Content { diff_image, .. } => {
+            let (w, h) = html_size(
+                &Size::new(diff_image.width(), diff_image.height()),
+                IMAGE_SIZE_LIMIT,
+            );
+            let mut data = Vec::new();
+            diff_image
+                .write_to(&mut Cursor::new(&mut data), image::ImageFormat::Png)
+                .unwrap();
+            embed_png(&data, w, h)
+        }
+    }
 }
 
 fn render_stat_item(label: &str, value_type: &str, value: &str) -> Markup {
@@ -43,83 +85,58 @@ fn render_stat_item(label: &str, value_type: &str, value: &str) -> Markup {
     }
 }
 
-fn render_difference_info(pair_diff: &PairResult) -> Markup {
+fn render_difference_info(config: &ReportConfig, pair_diff: &PairResult) -> Markup {
     match &pair_diff.difference {
         Difference::None => render_stat_item("Status", "ok", "Match"),
         Difference::LoadError => render_stat_item("Status", "error", "Loading error"),
+        Difference::MissingFile => render_stat_item("Status", "error", "Missing file"),
         Difference::SizeMismatch => html! {
             (render_stat_item("Status", "error", "Size mismatch"))
-            (render_stat_item("Left size", "", &pair_diff.left_info.as_ref().unwrap().size.to_string()))
-            (render_stat_item("Right size", "", &pair_diff.right_info.as_ref().unwrap().size.to_string()))
+            (render_stat_item(&format!("{} size", config.left_title), "", &pair_diff.left_info.info().unwrap().size.to_string()))
+            (render_stat_item(&format!("{} size", config.right_title), "", &pair_diff.right_info.info().unwrap().size.to_string()))
         },
-        Difference::ContentDifference { .. } => {
-            todo!()
+        Difference::Content {
+            n_different_pixels,
+            distance_sum,
+            ..
+        } => {
+            let size = &pair_diff.left_info.info().unwrap().size;
+            let n_pixels = size.width as f32 * size.height as f32;
+            let pct = *n_different_pixels as f32 / n_pixels * 100.0;
+            let distance_sum = *distance_sum as f32 / 255.0; // Normalize
+            let avg_color_distance = distance_sum / n_pixels;
+            html! {
+                (render_stat_item("Different pixels", "warning", &format!("{n_different_pixels} ({pct:.1}%)")))
+                (render_stat_item("Color distance", "", &format!("{distance_sum:.3}")))
+                (render_stat_item("Avg. color distance", "", &format!("{avg_color_distance:.4}")))
+            }
         }
     }
 }
 
-fn render_pair_diff(pair_diff: &PairResult) -> Markup {
+fn render_pair_diff(config: &ReportConfig, pair_diff: &PairResult) -> Markup {
     html! {
         div class="diff-entry" {
             h2 {(pair_diff.pair.title)};
             div class="comparison-container" {
                 div class="image-container" {
                     div class="stats-container" {
-                        (render_difference_info(&pair_diff))
+                        (render_difference_info(config, &pair_diff))
                     }
                     div class="image-box" {
-                        h3 { "Left image"}
+                        h3 { (config.left_title) }
                         (render_image(&pair_diff.left_info, &pair_diff.pair.left))
                     }
                     div class="image-box" {
-                        h3 { "Right image"}
+                        h3 { (config.right_title) }
                         (render_image(&pair_diff.right_info, &pair_diff.pair.right))
                     }
                     div class="image-box" {
                         h3 { "Difference"}
                         (render_difference_image(&pair_diff.difference))
                     }
-
-                    //     <div class="image-box">
-            //         <h3>Left Image</h3>
-            //         <img src="/api/placeholder/400/300" alt="Left image">
-            //     </div>
-            //     <div class="image-box">
-            //         <h3>Right Image</h3>
-            //         <img src="/api/placeholder/400/300" alt="Right image">
-            //     </div>
-            //     <div class="image-box">
-            //         <h3>Difference</h3>
-            //         <img src="/api/placeholder/400/300" alt="Difference visualization">
-            //     </div>
-            // </div>
-            // <div class="stats-container">
-            //     <div class="stat-item">
-            //         <div class="stat-label">Different Pixels</div>
-            //         <div class="stat-value warning">15.3%</div>
-            //     </div>
-            //     <div class="stat-item">
-            //         <div class="stat-label">Mean Difference</div>
-            //         <div class="stat-value">0.142</div>
-            //     </div>
-            //     <div class="stat-item">
-            //         <div class="stat-label">Max Difference</div>
-            //         <div class="stat-value">0.856</div>
-            //     </div>
-            //     <div class="stat-item">
-            //         <div class="stat-label">SSIM Score</div>
-            //         <div class="stat-value">0.925</div>
-            //     </div>
-            //     <div class="stat-item">
-            //         <div class="stat-label">Image Size</div>
-            //         <div class="stat-value">800×600</div>
-            //     </div>
+                }
             }
-        }
-        // <div class="metadata">
-        //     <p>Path: /path/to/image1.png</p>
-        //     <p>Difference score: 0.15</p>
-        // </div>
         }
     }
 }
@@ -237,14 +254,6 @@ body {
     color: #dc2626;
 }
 
-.metadata {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #edf2f7;
-    font-size: 0.9rem;
-    color: #718096;
-}
-
 @media (max-width: 1200px) {
     .comparison-container {
         flex-direction: column-reverse;
@@ -271,7 +280,11 @@ body {
 }
 ";
 
-pub(crate) fn create_report(diffs: Vec<PairResult>) -> anyhow::Result<()> {
+pub(crate) fn create_report(
+    config: &ReportConfig,
+    diffs: Vec<PairResult>,
+    output: &Path,
+) -> anyhow::Result<()> {
     let now = chrono::Local::now().round_subsecs(0);
     let report = html! {
         (DOCTYPE)
@@ -281,19 +294,20 @@ pub(crate) fn create_report(diffs: Vec<PairResult>) -> anyhow::Result<()> {
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
                 title { "Image diff" }
                 style { (CSS_STYLE) }
+                link rel="icon" type="image/png" href=(embed_png_url(&ICON));
             }
             body {
                  div class="header" {
-                    h1 { "Image Diff Report" }
+                    h1 { (embed_png(ICON, Some(32), Some(32))) "Image Diff Report" }
                     p { "Generated on " (now) }
                 }
                 @for pair_diff in &diffs {
-                   (render_pair_diff(pair_diff))
+                   (render_pair_diff(config, pair_diff))
                 }
             }
         }
     };
-    let mut file = File::create("report.html")?;
+    let mut file = File::create(output)?;
     file.write_all(report.into_string().as_bytes())?;
     Ok(())
 }

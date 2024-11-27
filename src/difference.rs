@@ -1,5 +1,6 @@
+use crate::difference::ImageInfoResult::Loaded;
 use crate::pair::Pair;
-use image::{GenericImageView, Pixel, Rgb, RgbImage};
+use image::{Pixel, Rgb, RgbImage};
 use std::fmt::{Display, Formatter};
 use std::path::Path;
 
@@ -34,14 +35,28 @@ impl ImageInfo {
     }
 }
 
-pub(crate) type ImageInfoResult = Result<ImageInfo, String>;
+pub(crate) enum ImageInfoResult {
+    Loaded(ImageInfo),
+    Missing,
+    Error(String),
+}
+
+impl ImageInfoResult {
+    pub fn info(&self) -> Option<&ImageInfo> {
+        match self {
+            Loaded(info) => Some(info),
+            _ => None,
+        }
+    }
+}
 
 #[derive(Debug)]
 pub(crate) enum Difference {
     None,
+    MissingFile,
     LoadError,
     SizeMismatch,
-    ContentDifference {
+    Content {
         n_different_pixels: u64,
         distance_sum: u64,
         diff_image: RgbImage,
@@ -59,25 +74,41 @@ fn load_image(path: &Path) -> anyhow::Result<RgbImage> {
     Ok(image::ImageReader::open(path)?.decode()?.into_rgb8())
 }
 
+fn load_image_with_info(path: &Path) -> (Option<RgbImage>, ImageInfoResult) {
+    if !path.exists() {
+        return (None, ImageInfoResult::Missing);
+    }
+    match load_image(path) {
+        Ok(image) => {
+            let info = ImageInfo::from_image(&image);
+            (Some(image), ImageInfoResult::Loaded(info))
+        }
+        Err(e) => (None, ImageInfoResult::Error(e.to_string())),
+    }
+}
+
 fn compute_pair_diff(pair: &Pair) -> (Difference, ImageInfoResult, ImageInfoResult) {
-    let left = load_image(&pair.left);
-    let right = load_image(&pair.right);
+    let (left, left_info) = load_image_with_info(&pair.left);
+    let (right, right_info) = load_image_with_info(&pair.right);
 
     let (left, right) = match (left, right) {
-        (Ok(left), Ok(right)) => (left, right),
-        (r1, r2) => {
+        (Some(left), Some(right)) => (left, right),
+        _ => {
             return (
-                Difference::LoadError,
-                r1.map(|i| ImageInfo::from_image(&i))
-                    .map_err(|e| e.to_string()),
-                r2.map(|i| ImageInfo::from_image(&i))
-                    .map_err(|e| e.to_string()),
+                match (&left_info, &right_info) {
+                    (_, ImageInfoResult::Error(_)) | (ImageInfoResult::Error(_), _) => {
+                        Difference::LoadError
+                    }
+                    (_, ImageInfoResult::Missing) | (ImageInfoResult::Missing, _) => {
+                        Difference::MissingFile
+                    }
+                    _ => unreachable!(),
+                },
+                left_info,
+                right_info,
             )
         }
     };
-
-    let left_info = Ok(ImageInfo::from_image(&left));
-    let right_info = Ok(ImageInfo::from_image(&right));
 
     if left.width() != right.width() || left.height() != right.height() {
         return (Difference::SizeMismatch, left_info, right_info);
@@ -110,7 +141,7 @@ fn compute_pair_diff(pair: &Pair) -> (Difference, ImageInfoResult, ImageInfoResu
         .collect();
     let diff_image = RgbImage::from_vec(left.width(), left.height(), diff_image_data).unwrap();
     (
-        Difference::ContentDifference {
+        Difference::Content {
             n_different_pixels,
             distance_sum,
             diff_image,
