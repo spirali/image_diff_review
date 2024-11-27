@@ -1,7 +1,13 @@
 [package]
-name = "image_diff"
+name = "image_diff_review"
 version = "0.1.0"
 edition = "2021"
+
+license = "MIT"
+description = "Reporting tool of image differences for snaphost testing"
+repository = "https://github.com/spirali/image_diff_review"
+readme = "README.md"
+keywords = ["image", "report", "diff"]
 
 [dependencies]
 anyhow = "1.0"

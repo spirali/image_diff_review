@@ -475,7 +475,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "image_diff"
+name = "image_diff_review"
 version = "0.1.0"
 dependencies = [
  "anyhow",
