@@ -1,0 +1,12 @@
+[package]
+name = "image_diff"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.22"
+chrono = "0.4"
+clap = { version = "4.5", features = ["derive"] }
+image = "0.25"
+maud = "0.26"
