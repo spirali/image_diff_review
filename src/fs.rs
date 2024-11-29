@@ -1,7 +1,7 @@
 use std::ffi::OsString;
 use std::path::Path;
 
-pub fn read_images_from_dir(path: &Path) -> anyhow::Result<Vec<OsString>> {
+pub fn read_images_from_dir(path: &Path) -> crate::Result<Vec<OsString>> {
     Ok(std::fs::read_dir(path)?
         .flatten()
         .filter_map(|path| {

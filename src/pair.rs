@@ -14,12 +14,12 @@ impl Pair {
     }
 }
 
-pub(crate) fn pairs_from_paths(left_path: &Path, right_path: &Path) -> anyhow::Result<Vec<Pair>> {
+pub(crate) fn pairs_from_paths(left_path: &Path, right_path: &Path) -> crate::Result<Vec<Pair>> {
     if !left_path.is_dir() {
-        anyhow::bail!("Left path ('{}') is not a directory", left_path.display());
+        return Err(crate::Error::NotDirectory(left_path.to_path_buf()));
     }
     if !right_path.is_dir() {
-        anyhow::bail!("Right path ('{}') is not a directory", left_path.display());
+        return Err(crate::Error::NotDirectory(right_path.to_path_buf()));
     }
     let mut names = read_images_from_dir(left_path)?;
     names.append(&mut read_images_from_dir(right_path)?);

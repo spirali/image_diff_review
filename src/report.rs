@@ -1,4 +1,5 @@
 use crate::difference::{Difference, ImageInfoResult, PairResult, Size};
+use crate::ReportConfig;
 use base64::prelude::*;
 use chrono::SubsecRound;
 use maud::{html, Markup, DOCTYPE};
@@ -8,11 +9,6 @@ use std::path::Path;
 
 const ICON: &[u8] = include_bytes!("../docs/logo_small.png");
 const IMAGE_SIZE_LIMIT: u32 = 400;
-
-pub(crate) struct ReportConfig<'a> {
-    pub left_title: &'a str,
-    pub right_title: &'a str,
-}
 
 fn embed_png_url(data: &[u8]) -> String {
     let mut url = "data:image/png;base64,".to_string();
@@ -280,11 +276,11 @@ body {
 }
 ";
 
-pub(crate) fn create_report(
+pub(crate) fn create_html_report(
     config: &ReportConfig,
-    diffs: Vec<PairResult>,
+    diffs: &[PairResult],
     output: &Path,
-) -> anyhow::Result<()> {
+) -> crate::Result<()> {
     let now = chrono::Local::now().round_subsecs(0);
     let report = html! {
         (DOCTYPE)
@@ -301,7 +297,7 @@ pub(crate) fn create_report(
                     h1 { (embed_png(ICON, Some(32), Some(32))) "Image Diff Report" }
                     p { "Generated on " (now) }
                 }
-                @for pair_diff in &diffs {
+                @for pair_diff in diffs {
                    (render_pair_diff(config, pair_diff))
                 }
             }

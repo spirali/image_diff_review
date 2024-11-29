@@ -70,7 +70,7 @@ pub(crate) struct PairResult {
     pub right_info: ImageInfoResult,
 }
 
-fn load_image(path: &Path) -> anyhow::Result<RgbImage> {
+fn load_image(path: &Path) -> crate::Result<RgbImage> {
     Ok(image::ImageReader::open(path)?.decode()?.into_rgb8())
 }
 

@@ -1,6 +1,6 @@
 [package]
 name = "image_diff_review"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 license = "MIT"
@@ -10,9 +10,16 @@ readme = "README.md"
 keywords = ["image", "report", "diff"]
 
 [dependencies]
-anyhow = "1.0"
 base64 = "0.22"
 chrono = "0.4"
-clap = { version = "4.5", features = ["derive"] }
 image = "0.25"
 maud = "0.26"
+thiserror = "2"
+clap = { version = "4.5", features = ["derive"], optional = true }
+
+[features]
+cli = ["clap"]
+
+[[bin]]
+name = "image_diff_review"
+required-features = ["cli"]
