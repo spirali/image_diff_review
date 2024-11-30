@@ -12,12 +12,19 @@ keywords = ["image", "report", "diff"]
 [dependencies]
 base64 = "0.22"
 chrono = "0.4"
-image = "0.25"
+image = { version = "0.25", default-features = false }
 maud = "0.26"
 thiserror = "2"
 clap = { version = "4.5", features = ["derive"], optional = true }
 
 [features]
+default = ["png"]
+all-formats = ["png", "jpeg", "webp", "bmp", "tiff"]
+png = ["image/png"]
+bmp = ["image/bmp"]
+tiff = ["image/tiff"]
+jpeg = ["image/jpeg"]
+webp = ["image/webp"]
 cli = ["clap"]
 
 [[bin]]

@@ -14,8 +14,16 @@ It can be used as a stand-alone CLI tool or as a Rust crate.
 
 ### Installation
 
+Basic installation, `PNG` format only
+
 ```commandline
 $ cargo install image_diff_review --features=cli
+```
+
+OR with all supported formats
+
+```commandline
+$ cargo install image_diff_review --features=cli,all-formats
 ```
 
 ### Usage
