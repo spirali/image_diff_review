@@ -16,9 +16,9 @@ fn embed_png_url(data: &[u8]) -> String {
     url
 }
 
-fn embed_png(data: &[u8], width: Option<u32>, height: Option<u32>) -> Markup {
+fn embed_png(data: &[u8], width: Option<u32>, height: Option<u32>, class: Option<&str>) -> Markup {
     html! {
-        img src=(embed_png_url(data)) width=[width] height=[height];
+        img class=[class] src=(embed_png_url(data)) width=[width] height=[height];
     }
 }
 
@@ -62,7 +62,7 @@ fn render_difference_image(difference: &Difference) -> Markup {
             diff_image
                 .write_to(&mut Cursor::new(&mut data), image::ImageFormat::Png)
                 .unwrap();
-            embed_png(&data, w, h)
+            embed_png(&data, w, h, None)
         }
     }
 }
@@ -152,6 +152,10 @@ body {
     border-radius: 8px;
     margin-bottom: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.logo {
+    vertical-align: -10%;
 }
 
 .header h1 {
@@ -294,7 +298,7 @@ pub(crate) fn create_html_report(
             }
             body {
                  div class="header" {
-                    h1 { (embed_png(ICON, Some(32), Some(32))) "Image Diff Report" }
+                    h1 { (embed_png(ICON, Some(32), Some(32), Some("logo"))) "Image Diff Report" }
                     p { "Generated on " (now) }
                 }
                 @for pair_diff in diffs {
