@@ -1,13 +1,13 @@
 [package]
-name = "image_diff_review"
-version = "0.2.0"
+name = "kompari"
+version = "0.1.0"
 edition = "2021"
 
 license = "MIT"
 description = "Reporting tool of image differences for snaphost testing"
 repository = "https://github.com/spirali/image_diff_review"
 readme = "README.md"
-keywords = ["image", "report", "diff"]
+keywords = ["image", "report", "diff", "tests"]
 
 [dependencies]
 base64 = "0.22"
@@ -28,5 +28,5 @@ webp = ["image/webp"]
 cli = ["clap"]
 
 [[bin]]
-name = "image_diff_review"
+name = "kompari"
 required-features = ["cli"]
