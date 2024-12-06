@@ -3,7 +3,7 @@ name = "kompari"
 version = "0.1.0"
 edition = "2021"
 
-license = "MIT"
+license = "Apache-2.0 OR MIT"
 description = "Reporting tool of image differences for snaphost testing"
 repository = "https://github.com/linebender/kompari"
 readme = "README.md"
