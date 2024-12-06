@@ -17,19 +17,19 @@ It can be used as a stand-alone CLI tool or as a Rust crate.
 Basic installation, `PNG` format only
 
 ```commandline
-$ cargo install image_diff_review --features=cli
+$ cargo install kompari --features=cli
 ```
 
 OR with all supported formats
 
 ```commandline
-$ cargo install image_diff_review --features=cli,all-formats
+$ cargo install kompari --features=cli,all-formats
 ```
 
 ### Usage
 
 ```commandline
-$ image_diff_review <left/image_dir> <right/image_dir> report
+$ kompari <left/image_dir> <right/image_dir> report
 ```
 
 ## License

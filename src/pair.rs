@@ -1,3 +1,6 @@
+// Copyright 2024 the Kompari Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use crate::fs::read_images_from_dir;
 use std::path::{Path, PathBuf};
 

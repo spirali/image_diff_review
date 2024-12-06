@@ -1,3 +1,6 @@
+// Copyright 2024 the Kompari Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use crate::difference::ImageInfoResult::Loaded;
 use crate::pair::Pair;
 use image::{Pixel, Rgb, RgbImage};

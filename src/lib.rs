@@ -1,3 +1,6 @@
+// Copyright 2024 the Kompari Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use crate::difference::{compute_differences, Difference, ImageInfoResult, PairResult};
 use image::ImageError;
 use std::path::{Path, PathBuf};
@@ -51,7 +54,7 @@ pub struct ReportConfig<'a> {
     right_title: &'a str,
 }
 
-impl<'a> Default for ReportConfig<'a> {
+impl Default for ReportConfig<'_> {
     fn default() -> Self {
         ReportConfig {
             left_title: "Left image",
@@ -116,4 +119,12 @@ impl ImageDiff {
         }
         Ok(())
     }
+}
+
+#[cfg(test)]
+mod tests {
+    // CI will fail unless cargo nextest can execute at least one test per workspace.
+    // Delete this dummy test once we have an actual real test.
+    #[test]
+    fn dummy_test_until_we_have_a_real_test() {}
 }
