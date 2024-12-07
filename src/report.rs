@@ -1,3 +1,6 @@
+// Copyright 2024 the Kompari Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use crate::difference::{Difference, ImageInfoResult, PairResult, Size};
 use crate::ReportConfig;
 use base64::prelude::*;

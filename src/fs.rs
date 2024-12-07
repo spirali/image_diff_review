@@ -1,3 +1,6 @@
+// Copyright 2024 the Kompari Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use std::ffi::OsString;
 use std::path::Path;
 

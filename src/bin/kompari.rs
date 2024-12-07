@@ -1,5 +1,8 @@
+// Copyright 2024 the Kompari Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use clap::Parser;
-use image_diff_review::{CompareConfig, ImageDiff, ReportConfig};
+use kompari::{CompareConfig, ImageDiff, ReportConfig};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -47,7 +50,7 @@ enum Command {
     Report(ReportArgs),
 }
 
-fn process_command(args: Args) -> image_diff_review::Result<()> {
+fn process_command(args: Args) -> kompari::Result<()> {
     let mut config = CompareConfig::default();
     config.set_ignore_match(args.ignore_match);
     config.set_ignore_left_missing(args.ignore_left_missing);

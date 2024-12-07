@@ -3,9 +3,9 @@ name = "kompari"
 version = "0.1.0"
 edition = "2021"
 
-license = "MIT"
+license = "Apache-2.0 OR MIT"
 description = "Reporting tool of image differences for snaphost testing"
-repository = "https://github.com/spirali/image_diff_review"
+repository = "https://github.com/linebender/kompari"
 readme = "README.md"
 keywords = ["image", "report", "diff", "tests"]
 
@@ -30,3 +30,8 @@ cli = ["clap"]
 [[bin]]
 name = "kompari"
 required-features = ["cli"]
+
+[profile.ci]
+inherits = "dev"
+[profile.ci.package."*"]
+debug-assertions = true # Keep always on for dependencies for cache reuse.
