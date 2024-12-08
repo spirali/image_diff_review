@@ -18,14 +18,8 @@ default-target = "x86_64-unknown-linux-gnu"
 targets = []
 
 [features]
-default = ["png"]
-all-formats = ["png", "jpeg", "webp", "bmp", "tiff"]
-png = ["image/png"]
-bmp = ["image/bmp"]
-tiff = ["image/tiff"]
-jpeg = ["image/jpeg"]
-webp = ["image/webp"]
 cli = ["dep:clap"]
+xtask-cli = ["dep:clap"]
 
 [[bin]]
 name = "kompari"
@@ -34,7 +28,7 @@ required-features = ["cli"]
 [dependencies]
 base64 = "0.22"
 chrono = "0.4"
-image = { version = "0.25", default-features = false }
+image = { version = "0.25", default-features = false, features = ["png"] }
 maud = "0.26"
 thiserror = "2"
 clap = { version = "4.5", features = ["derive"], optional = true }
