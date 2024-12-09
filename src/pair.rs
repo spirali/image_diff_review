@@ -1,7 +1,7 @@
 // Copyright 2024 the Kompari Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use crate::fs::read_images_from_dir;
+use crate::fs::list_image_dir_names;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
@@ -24,8 +24,8 @@ pub(crate) fn pairs_from_paths(left_path: &Path, right_path: &Path) -> crate::Re
     if !right_path.is_dir() {
         return Err(crate::Error::NotDirectory(right_path.to_path_buf()));
     }
-    let mut names = read_images_from_dir(left_path)?;
-    names.append(&mut read_images_from_dir(right_path)?);
+    let mut names: Vec<_> = list_image_dir_names(left_path)?.collect();
+    names.extend(list_image_dir_names(right_path)?);
     names.sort_unstable();
     names.dedup();
     Ok(names

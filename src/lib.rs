@@ -14,6 +14,12 @@ mod fs;
 mod pair;
 mod report;
 
+#[cfg(feature = "xtask-cli")]
+mod xtask_cli;
+
+#[cfg(feature = "xtask-cli")]
+pub use xtask_cli::{xtask_cli, XtaskActions};
+
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("IO error")]
