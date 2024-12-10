@@ -8,33 +8,55 @@ use std::path::{Path, PathBuf};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-struct XtaskArgs {
+pub struct XtaskArgs {
     #[clap(subcommand)]
     command: XtaskCommand,
 }
 
 #[derive(Parser, Debug)]
-enum XtaskCommand {
+pub enum XtaskCommand {
     Report(ReportArgs),
     Clean,
     DeadSnapshots(DeadSnapshotArgs),
 }
 
 #[derive(Parser, Debug)]
-struct ReportArgs {
+pub struct ReportArgs {
     /// Output filename, default 'report.html'
     #[arg(long, default_value = "report.html")]
     output: PathBuf,
 }
 
 #[derive(Parser, Debug)]
-struct DeadSnapshotArgs {
+pub struct DeadSnapshotArgs {
     #[arg(long, default_value_t = false)]
     remove_files: bool,
 }
 
 pub trait XtaskActions {
     fn generate_all_tests(&self) -> crate::Result<()>;
+}
+
+impl XtaskArgs {
+    pub fn run(
+        current_path: &Path,
+        snapshots_path: &Path,
+        actions: impl XtaskActions,
+    ) -> crate::Result<()> {
+        let args = XtaskArgs::parse();
+        match args.command {
+            XtaskCommand::Report(report_args) => {
+                create_report(current_path, snapshots_path, &report_args)?;
+            }
+            XtaskCommand::Clean => {
+                clean_image_dir(current_path)?;
+            }
+            XtaskCommand::DeadSnapshots(ds_args) => {
+                process_dead_snapshots(current_path, snapshots_path, actions, &ds_args)?;
+            }
+        }
+        Ok(())
+    }
 }
 
 fn clean_image_dir(path: &Path) -> crate::Result<()> {
@@ -102,25 +124,5 @@ fn create_report(
     report_config.set_left_title("Current test");
     report_config.set_right_title("Snapshot");
     image_diff.create_report(&report_config, &report_args.output, true)?;
-    Ok(())
-}
-
-pub fn xtask_cli(
-    current_path: &Path,
-    snapshots_path: &Path,
-    actions: impl XtaskActions,
-) -> crate::Result<()> {
-    let args = XtaskArgs::parse();
-    match args.command {
-        XtaskCommand::Report(report_args) => {
-            create_report(current_path, snapshots_path, &report_args)?;
-        }
-        XtaskCommand::Clean => {
-            clean_image_dir(current_path)?;
-        }
-        XtaskCommand::DeadSnapshots(ds_args) => {
-            process_dead_snapshots(current_path, snapshots_path, actions, &ds_args)?;
-        }
-    }
     Ok(())
 }

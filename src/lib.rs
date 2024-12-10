@@ -15,10 +15,7 @@ mod pair;
 mod report;
 
 #[cfg(feature = "xtask-cli")]
-mod xtask_cli;
-
-#[cfg(feature = "xtask-cli")]
-pub use xtask_cli::{xtask_cli, XtaskActions};
+pub mod xtask_cli;
 
 #[derive(Error, Debug)]
 pub enum Error {
