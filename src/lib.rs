@@ -14,6 +14,9 @@ mod fs;
 mod pair;
 mod report;
 
+#[cfg(feature = "xtask-cli")]
+pub mod xtask_cli;
+
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("IO error")]
