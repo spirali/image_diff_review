@@ -1,2 +1,2 @@
 [alias]
-xtask-kompari = "run --package xtask_kompari --"
+xtask = "run --package xtask_kompari --"
