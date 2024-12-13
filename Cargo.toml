@@ -1,37 +1,19 @@
-[package]
-name = "kompari"
-version = "0.1.0"
-description = "Reporting tool of image differences for snaphost testing."
-keywords = ["image", "report", "diff", "tests"]
-categories = ["graphics", "multimedia::images", "development-tools::testing"]
+[workspace]
+resolver = "2"
+members = [
+    "kompari", "example/demolib", "example/xtask_kompari"
+]
+
+[workspace.package]
 edition = "2021"
-# Keep in sync with RUST_MIN_VER in .github/workflows/ci.yml, with the relevant README.md files,
-# and with the MSRV in the Unreleased section of CHANGELOG.md.
-rust-version = "1.74"
+# Keep in sync with RUST_MIN_VER in .github/workflows/ci.yml, with the relevant README.md files
+# and with the MSRV in the `Unreleased` section of CHANGELOG.md.
+rust-version = "1.75"
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/linebender/kompari"
+repository = "https://github.com/linebender/parley"
 
-[package.metadata.docs.rs]
-all-features = true
-# There are no platform specific docs.
-default-target = "x86_64-unknown-linux-gnu"
-targets = []
-
-[features]
-cli = ["dep:clap"]
-xtask-cli = ["dep:clap"]
-
-[[bin]]
-name = "kompari"
-required-features = ["cli"]
-
-[dependencies]
-base64 = "0.22"
-chrono = "0.4"
+[workspace.dependencies]
 image = { version = "0.25", default-features = false, features = ["png"] }
-maud = "0.26"
-thiserror = "2"
-clap = { version = "4.5", features = ["derive"], optional = true }
 
 [profile.ci]
 inherits = "dev"

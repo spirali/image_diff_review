@@ -10,7 +10,7 @@ use std::fs::File;
 use std::io::{Cursor, Write};
 use std::path::Path;
 
-const ICON: &[u8] = include_bytes!("../docs/logo_small.png");
+const ICON: &[u8] = include_bytes!("../../docs/logo_small.png");
 const IMAGE_SIZE_LIMIT: u32 = 400;
 
 fn embed_png_url(data: &[u8]) -> String {

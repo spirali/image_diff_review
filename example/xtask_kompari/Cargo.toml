@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-demolib = { path = "../demolib"}
-kompari = { path = "../..", features = ["xtask-cli"] }
+demolib = { path = "../demolib" }
+kompari = { path = "../../kompari", features = ["xtask-cli"] }

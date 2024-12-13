@@ -1,0 +1,32 @@
+[package]
+name = "kompari"
+version = "0.1.0"
+description = "Reporting tool of image differences for snaphost testing."
+keywords = ["image", "report", "diff", "tests"]
+categories = ["graphics", "multimedia::images", "development-tools::testing"]
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+# There are no platform specific docs.
+default-target = "x86_64-unknown-linux-gnu"
+targets = []
+
+[features]
+cli = ["dep:clap"]
+xtask-cli = ["dep:clap"]
+
+[[bin]]
+name = "kompari"
+required-features = ["cli"]
+
+[dependencies]
+base64 = "0.22"
+chrono = "0.4"
+maud = "0.26"
+thiserror = "2"
+clap = { version = "4.5", features = ["derive"], optional = true }
+image = { workspace = true }
