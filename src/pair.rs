@@ -17,7 +17,11 @@ impl Pair {
     }
 }
 
-pub(crate) fn pairs_from_paths(left_path: &Path, right_path: &Path) -> crate::Result<Vec<Pair>> {
+pub(crate) fn pairs_from_paths(
+    left_path: &Path,
+    right_path: &Path,
+    filter_name: Option<&str>,
+) -> crate::Result<Vec<Pair>> {
     if !left_path.is_dir() {
         return Err(crate::Error::NotDirectory(left_path.to_path_buf()));
     }
@@ -26,6 +30,11 @@ pub(crate) fn pairs_from_paths(left_path: &Path, right_path: &Path) -> crate::Re
     }
     let mut names: Vec<_> = list_image_dir_names(left_path)?.collect();
     names.extend(list_image_dir_names(right_path)?);
+    names.retain(|filename| {
+        filter_name
+            .map(|f| filename.to_string_lossy().contains(f))
+            .unwrap_or(true)
+    });
     names.sort_unstable();
     names.dedup();
     Ok(names

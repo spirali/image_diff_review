@@ -32,13 +32,14 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Default)]
-pub struct CompareConfig {
+pub struct CompareConfig<'a> {
     ignore_match: bool,
     ignore_left_missing: bool,
     ignore_right_missing: bool,
+    filter_name: Option<&'a str>,
 }
 
-impl CompareConfig {
+impl<'a> CompareConfig<'a> {
     pub fn set_ignore_match(&mut self, value: bool) {
         self.ignore_match = value;
     }
@@ -49,6 +50,10 @@ impl CompareConfig {
 
     pub fn set_ignore_right_missing(&mut self, value: bool) {
         self.ignore_right_missing = value;
+    }
+
+    pub fn set_filter_name(&mut self, value: Option<&'a str>) {
+        self.filter_name = value;
     }
 }
 
@@ -88,7 +93,7 @@ impl ImageDiff {
         left_path: &Path,
         right_path: &Path,
     ) -> Result<()> {
-        let pairs = pairs_from_paths(left_path, right_path)?;
+        let pairs = pairs_from_paths(left_path, right_path, config.filter_name)?;
         let mut diffs = compute_differences(pairs);
 
         if config.ignore_match {
