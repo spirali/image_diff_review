@@ -5,7 +5,7 @@ use crate::difference::{Difference, ImageInfoResult, PairResult, Size};
 use crate::ReportConfig;
 use base64::prelude::*;
 use chrono::SubsecRound;
-use maud::{html, Markup, DOCTYPE};
+use maud::{html, Markup, PreEscaped, DOCTYPE};
 use std::fs::File;
 use std::io::{Cursor, Write};
 use std::path::Path;
@@ -17,12 +17,6 @@ fn embed_png_url(data: &[u8]) -> String {
     let mut url = "data:image/png;base64,".to_string();
     url.push_str(&base64::engine::general_purpose::STANDARD.encode(data));
     url
-}
-
-fn embed_png(data: &[u8], width: Option<u32>, height: Option<u32>, class: Option<&str>) -> Markup {
-    html! {
-        img class=[class] src=(embed_png_url(data)) width=[width] height=[height];
-    }
 }
 
 fn render_image(
@@ -40,7 +34,7 @@ fn render_image(
                 path.display().to_string()
             };
             html! {
-                img src=(path) width=[w] height=[h];
+                img class="zoom" src=(path) width=[w] height=[h] onclick="openImageDialog(this)";
             }
         }
         ImageInfoResult::Missing => {
@@ -75,7 +69,9 @@ fn render_difference_image(difference: &Difference) -> Markup {
             diff_image
                 .write_to(&mut Cursor::new(&mut data), image::ImageFormat::Png)
                 .unwrap();
-            embed_png(&data, w, h, None)
+            html! {
+                img class="zoom" src=(embed_png_url(&data)) width=[w] height=[h] onclick="openImageDialog(this)";
+            }
         }
     }
 }
@@ -291,6 +287,55 @@ body {
         min-width: 100%;
     }
 }
+
+img.zoom:hover {
+    transform: scale(1.05);
+}
+
+dialog {
+    width: 80%;
+    height: 80%;
+    max-width: 800px;
+    max-height: 820px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.zoomed-image {
+    object-fit: contain;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -o-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    -ms-interpolation-mode: nearest-neighbor;
+    image-rendering: pixelated;
+}
+";
+
+const JS_CODE: &str = "
+function openImageDialog(img) {
+    const dialog = document.getElementById('imageDialog');
+    const zoomedImg = document.getElementById('zoomedImage');
+    zoomedImg.src = img.src;
+    if (img.width < img.height) {
+        zoomedImg.style.width = \"100%\";
+        zoomedImg.style.height = \"auto\";
+    } else {
+        zoomedImg.style.width = \"auto\";
+        zoomedImg.style.height = \"100%\";
+    }
+    dialog.showModal();
+}
+
+function closeImageDialog() {
+    const dialog = document.getElementById('imageDialog');
+    dialog.close();
+}
+
+document.getElementById('imageDialog').addEventListener('click', function(event) {
+    closeImageDialog();
+});
 ";
 
 pub(crate) fn create_html_report(
@@ -305,15 +350,20 @@ pub(crate) fn create_html_report(
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
+                meta name="generator" content=(format!("Kompari {}", env!("CARGO_PKG_VERSION")));
                 title { "Image diff" }
-                style { (CSS_STYLE) }
+                style { (PreEscaped(CSS_STYLE)) }
                 link rel="icon" type="image/png" href=(embed_png_url(&ICON));
             }
             body {
                  div class="header" {
-                    h1 { (embed_png(ICON, Some(32), Some(32), Some("logo"))) "Image Diff Report" }
+                    h1 { img class="logo" src=(embed_png_url(ICON)) width="32" height="32"; "Kompari Report" }
                     p { "Generated on " (now) }
                 }
+                dialog id="imageDialog" {
+                    img id="zoomedImage" class="zoomed-image" src="" alt="Zoomed Image";
+                }
+                script { (PreEscaped(JS_CODE)) }
                 @for pair_diff in diffs {
                    (render_pair_diff(config, pair_diff)?)
                 }
