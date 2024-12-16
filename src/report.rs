@@ -350,6 +350,7 @@ pub(crate) fn create_html_report(
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
+                meta name="generator" content=(format!("Kompari {}", env!("CARGO_PKG_VERSION")));
                 title { "Image diff" }
                 style { (PreEscaped(CSS_STYLE)) }
                 link rel="icon" type="image/png" href=(embed_png_url(&ICON));
