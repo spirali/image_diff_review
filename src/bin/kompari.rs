@@ -47,6 +47,10 @@ struct ReportArgs {
     /// Output filename, default 'report.html'
     #[arg(long, default_value = "report.html")]
     output: PathBuf,
+
+    /// Embed images into the report
+    #[arg(long, default_value_t = false)]
+    embed_images: bool,
 }
 
 #[derive(Parser, Debug)]
@@ -69,6 +73,7 @@ fn process_command(args: Args) -> kompari::Result<()> {
             let mut config = ReportConfig::default();
             config.set_left_title(&args.left_title);
             config.set_right_title(&args.right_title);
+            config.set_embed_images(opts.embed_images);
             image_diff.create_report(&config, &opts.output, true)?;
         }
     }

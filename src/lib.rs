@@ -60,6 +60,7 @@ impl<'a> CompareConfig<'a> {
 pub struct ReportConfig<'a> {
     left_title: &'a str,
     right_title: &'a str,
+    embed_images: bool,
 }
 
 impl Default for ReportConfig<'_> {
@@ -67,6 +68,7 @@ impl Default for ReportConfig<'_> {
         ReportConfig {
             left_title: "Left image",
             right_title: "Right image",
+            embed_images: false,
         }
     }
 }
@@ -78,6 +80,10 @@ impl<'a> ReportConfig<'a> {
 
     pub fn set_right_title(&mut self, title: &'a str) {
         self.right_title = title;
+    }
+
+    pub fn set_embed_images(&mut self, embed_images: bool) {
+        self.embed_images = embed_images;
     }
 }
 

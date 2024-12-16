@@ -25,12 +25,22 @@ fn embed_png(data: &[u8], width: Option<u32>, height: Option<u32>, class: Option
     }
 }
 
-fn render_image(image_info: &ImageInfoResult, path: &Path) -> Markup {
-    match image_info {
+fn render_image(
+    config: &ReportConfig,
+    image_info: &ImageInfoResult,
+    path: &Path,
+) -> crate::Result<Markup> {
+    Ok(match image_info {
         ImageInfoResult::Loaded(info) => {
             let (w, h) = html_size(&info.size, IMAGE_SIZE_LIMIT);
+            let path = if config.embed_images {
+                let image_data = std::fs::read(path)?;
+                embed_png_url(&image_data)
+            } else {
+                path.display().to_string()
+            };
             html! {
-                img src=(path.display()) width=[w] height=[h];
+                img src=(path) width=[w] height=[h];
             }
         }
         ImageInfoResult::Missing => {
@@ -39,7 +49,7 @@ fn render_image(image_info: &ImageInfoResult, path: &Path) -> Markup {
         ImageInfoResult::Error(err) => {
             html! { "Error: " (err) }
         }
-    }
+    })
 }
 
 pub fn html_size(size: &Size, size_limit: u32) -> (Option<u32>, Option<u32>) {
@@ -113,8 +123,8 @@ fn render_difference_info(config: &ReportConfig, pair_diff: &PairResult) -> Mark
     }
 }
 
-fn render_pair_diff(config: &ReportConfig, pair_diff: &PairResult) -> Markup {
-    html! {
+fn render_pair_diff(config: &ReportConfig, pair_diff: &PairResult) -> crate::Result<Markup> {
+    Ok(html! {
         div class="diff-entry" {
             h2 {(pair_diff.pair.title)};
             div class="comparison-container" {
@@ -124,11 +134,11 @@ fn render_pair_diff(config: &ReportConfig, pair_diff: &PairResult) -> Markup {
                     }
                     div class="image-box" {
                         h3 { (config.left_title) }
-                        (render_image(&pair_diff.left_info, &pair_diff.pair.left))
+                        (render_image(config, &pair_diff.left_info, &pair_diff.pair.left)?)
                     }
                     div class="image-box" {
                         h3 { (config.right_title) }
-                        (render_image(&pair_diff.right_info, &pair_diff.pair.right))
+                        (render_image(config, &pair_diff.right_info, &pair_diff.pair.right)?)
                     }
                     div class="image-box" {
                         h3 { "Difference"}
@@ -137,7 +147,7 @@ fn render_pair_diff(config: &ReportConfig, pair_diff: &PairResult) -> Markup {
                 }
             }
         }
-    }
+    })
 }
 
 const CSS_STYLE: &str = "
@@ -305,7 +315,7 @@ pub(crate) fn create_html_report(
                     p { "Generated on " (now) }
                 }
                 @for pair_diff in diffs {
-                   (render_pair_diff(config, pair_diff))
+                   (render_pair_diff(config, pair_diff)?)
                 }
             }
         }

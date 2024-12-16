@@ -25,6 +25,10 @@ pub struct ReportArgs {
     /// Output filename, default 'report.html'
     #[arg(long, default_value = "report.html")]
     output: PathBuf,
+
+    /// Embed images into the report
+    #[arg(long, default_value_t = false)]
+    embed_images: bool,
 }
 
 #[derive(Parser, Debug)]
@@ -123,6 +127,7 @@ fn create_report(
     let mut report_config = crate::ReportConfig::default();
     report_config.set_left_title("Current test");
     report_config.set_right_title("Snapshot");
+    report_config.set_embed_images(report_config.embed_images);
     image_diff.create_report(&report_config, &report_args.output, true)?;
     Ok(())
 }
