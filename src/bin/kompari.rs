@@ -34,6 +34,10 @@ struct Args {
     #[arg(long, default_value_t = false)]
     ignore_match: bool,
 
+    /// Filter filenames by name
+    #[arg(long)]
+    filter: Option<String>,
+
     #[clap(subcommand)]
     command: Command,
 }
@@ -55,6 +59,7 @@ fn process_command(args: Args) -> kompari::Result<()> {
     config.set_ignore_match(args.ignore_match);
     config.set_ignore_left_missing(args.ignore_left_missing);
     config.set_ignore_right_missing(args.ignore_right_missing);
+    config.set_filter_name(args.filter.as_deref());
 
     let mut image_diff = ImageDiff::default();
     image_diff.compare_directories(&config, &args.left_path, &args.right_path)?;
