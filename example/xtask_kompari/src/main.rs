@@ -1,6 +1,7 @@
 // Copyright 2024 the Kompari Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+use clap::Parser;
 use kompari::xtask_cli::{XtaskActions, XtaskArgs};
 use std::path::Path;
 use std::process::Command;
@@ -26,5 +27,5 @@ fn main() -> kompari::Result<()> {
     let current_path = tests_path.join("current");
     let snapshots_path = tests_path.join("snapshots");
 
-    XtaskArgs::run(&current_path, &snapshots_path, XtaskActionsImpl())
+    XtaskArgs::parse().run(&current_path, &snapshots_path, XtaskActionsImpl())
 }
