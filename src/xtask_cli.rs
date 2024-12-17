@@ -43,20 +43,20 @@ pub trait XtaskActions {
 
 impl XtaskArgs {
     pub fn run(
+        &self,
         current_path: &Path,
         snapshots_path: &Path,
         actions: impl XtaskActions,
     ) -> crate::Result<()> {
-        let args = XtaskArgs::parse();
-        match args.command {
+        match &self.command {
             XtaskCommand::Report(report_args) => {
-                create_report(current_path, snapshots_path, &report_args)?;
+                create_report(current_path, snapshots_path, report_args)?;
             }
             XtaskCommand::Clean => {
                 clean_image_dir(current_path)?;
             }
             XtaskCommand::DeadSnapshots(ds_args) => {
-                process_dead_snapshots(current_path, snapshots_path, actions, &ds_args)?;
+                process_dead_snapshots(current_path, snapshots_path, actions, ds_args)?;
             }
         }
         Ok(())
