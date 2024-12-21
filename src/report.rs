@@ -123,9 +123,11 @@ fn render_pair_diff(config: &ReportConfig, pair_diff: &PairResult) -> crate::Res
     Ok(html! {
         div class="diff-entry" {
             h2 {
-                label class="toggle-switch" {
-                    input type="checkbox" onchange="toggle(event)";
-                    span class="slider";
+                @if config.is_review {
+                    label class="toggle-switch" {
+                        input type="checkbox" onchange="toggle(event)";
+                        span class="slider";
+                    }
                 }
                 (pair_diff.pair.title)};
             div class="comparison-container" {
@@ -435,12 +437,12 @@ function updateAcceptButton() {
 }
 ";
 
-pub(crate) fn create_html_report(
+pub(crate) fn render_html_report(
     config: &ReportConfig,
     diffs: &[PairResult],
-    output: &Path,
-) -> crate::Result<()> {
+) -> crate::Result<String> {
     let now = chrono::Local::now().round_subsecs(0);
+    let title = PreEscaped(if config.is_review { "Kompari review" } else { "Kompari report" });
     let report = html! {
         (DOCTYPE)
         html {
@@ -448,22 +450,24 @@ pub(crate) fn create_html_report(
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
                 meta name="generator" content=(format!("Kompari {}", env!("CARGO_PKG_VERSION")));
-                title { "Image diff" }
+                title { (title) }
                 style { (PreEscaped(CSS_STYLE)) }
                 link rel="icon" type="image/png" href=(embed_png_url(&ICON));
             }
             body {
                  div class="header" {
-                    h1 { img class="logo" src=(embed_png_url(ICON)) width="32" height="32"; "Kompari Report" }
+                    h1 { img class="logo" src=(embed_png_url(ICON)) width="32" height="32"; (title) }
                     p { "Generated on " (now) }
                 }
                 dialog id="imageDialog" {
                     img id="zoomedImage" class="zoomed-image" src="" alt="Zoomed Image";
                 }
-                button class="accept-button" id="acceptButton" disabled {
-                    span class="button-text" id="acceptText" { (format!("Accept Selected Tests (0 / {})", diffs.len())) }
+                @if config.is_review {
+                    script { (format!("const nTests = {};", diffs.len())) }
+                    button class="accept-button" id="acceptButton" disabled {
+                        span class="button-text" id="acceptText" { (format!("Accept Selected Tests (0 / {})", diffs.len())) }
+                    }
                 }
-                script { (format!("const nTests = {};", diffs.len())) }
                 script { (PreEscaped(JS_CODE)) }
                 @for pair_diff in diffs {
                    (render_pair_diff(config, pair_diff)?)
@@ -471,7 +475,17 @@ pub(crate) fn create_html_report(
             }
         }
     };
+    Ok(report.into_string())
+}
+
+
+pub(crate) fn create_html_report(
+    config: &ReportConfig,
+    diffs: &[PairResult],
+    output: &Path,
+) -> crate::Result<()> {
+    let report = render_html_report(config, diffs)?;
     let mut file = File::create(output)?;
-    file.write_all(report.into_string().as_bytes())?;
+    file.write_all(report.as_bytes())?;
     Ok(())
 }

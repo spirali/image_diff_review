@@ -61,6 +61,7 @@ pub struct ReportConfig<'a> {
     left_title: &'a str,
     right_title: &'a str,
     embed_images: bool,
+    is_review: bool,
 }
 
 impl Default for ReportConfig<'_> {
@@ -69,6 +70,7 @@ impl Default for ReportConfig<'_> {
             left_title: "Left image",
             right_title: "Right image",
             embed_images: false,
+            is_review: false,
         }
     }
 }
