@@ -122,7 +122,12 @@ fn render_difference_info(config: &ReportConfig, pair_diff: &PairResult) -> Mark
 fn render_pair_diff(config: &ReportConfig, pair_diff: &PairResult) -> crate::Result<Markup> {
     Ok(html! {
         div class="diff-entry" {
-            h2 {(pair_diff.pair.title)};
+            h2 {
+                label class="toggle-switch" {
+                    input type="checkbox" onchange="toggle(event)";
+                    span class="slider";
+                }
+                (pair_diff.pair.title)};
             div class="comparison-container" {
                 div class="image-container" {
                     div class="stats-container" {
@@ -311,6 +316,78 @@ dialog {
     -ms-interpolation-mode: nearest-neighbor;
     image-rendering: pixelated;
 }
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+  margin-right: 1em;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .1s;
+  border-radius: 34px;
+}
+.slider:before {
+  position: absolute;
+  content: \"\";
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .1s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #3c3;
+}
+input:checked + .slider:before {
+  transform: translateX(30px);
+}
+
+.accept-button {
+  padding: 12px 24px;
+  margin-bottom: 1em;
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+  background-color: #4CAF50;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.accept-button:hover {
+  background-color: #45A049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.accept-button:active {
+  transform: translateY(0px);
+  box-shadow: none;
+}
+.accept-button:disabled {
+  background-color: #CCCCCC;
+  cursor: not-allowed;
+  transform: none;
+}
+
 ";
 
 const JS_CODE: &str = "
@@ -336,6 +413,26 @@ function closeImageDialog() {
 document.getElementById('imageDialog').addEventListener('click', function(event) {
     closeImageDialog();
 });
+
+var selected = new Set();
+function toggle(event) {
+    let node = event.target.parentNode.parentNode;
+    if (event.target.checked) {
+        selected.add(node.textContent);
+        node.style.color = \"#3a3\";
+    } else {
+        selected.delete(node.textContent);
+        node.style.color = \"#333\";
+    }
+    updateAcceptButton()
+}
+
+function updateAcceptButton() {
+    let text = document.getElementById('acceptText');
+    text.textContent = \"Accept Selected Tests (\" + selected.size + \" / \" + nTests + \")\";
+    let button = document.getElementById('acceptButton');
+    button.disabled = (selected.size === 0);
+}
 ";
 
 pub(crate) fn create_html_report(
@@ -363,6 +460,10 @@ pub(crate) fn create_html_report(
                 dialog id="imageDialog" {
                     img id="zoomedImage" class="zoomed-image" src="" alt="Zoomed Image";
                 }
+                button class="accept-button" id="acceptButton" disabled {
+                    span class="button-text" id="acceptText" { (format!("Accept Selected Tests (0 / {})", diffs.len())) }
+                }
+                script { (format!("const nTests = {};", diffs.len())) }
                 script { (PreEscaped(JS_CODE)) }
                 @for pair_diff in diffs {
                    (render_pair_diff(config, pair_diff)?)
